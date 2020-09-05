@@ -1,0 +1,3 @@
+include ':ffmpegLibrary'
+include ':app'
+rootProject.name = "MyFfmpegDemo3"
