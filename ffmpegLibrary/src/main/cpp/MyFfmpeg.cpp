@@ -15,6 +15,7 @@ MyFfmpeg::MyFfmpeg(MyCallJava *callJava, const char *str) {
     this->myCallJava = callJava;
     this->myStatue = new MyStatue();
     this->myQueue = new MyQueue(myStatue);
+    this->myAudio = new MyAudio(myStatue, myQueue);
     url = str;
 }
 
@@ -40,28 +41,28 @@ void MyFfmpeg::deal() {
     }
     for (int i = 0; i < avFormatContext->nb_streams; i++) {
         if (avFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            streamIndex = i;
-            codecpar = avFormatContext->streams[i]->codecpar;
+            myAudio->streamIndex = i;
+            myAudio->codecpar = avFormatContext->streams[i]->codecpar;
             break;
         }
     }
 
-    AVCodec *pCodec = avcodec_find_decoder(codecpar->codec_id);
+    AVCodec *pCodec = avcodec_find_decoder(myAudio->codecpar->codec_id);
     if (!pCodec) {
         LOGE("寻找解码器失败")
         return;
     }
 
-    pContext = avcodec_alloc_context3(pCodec);
-    if (!pContext) {
+    myAudio->pContext = avcodec_alloc_context3(pCodec);
+    if (!myAudio->pContext) {
         LOGE("寻找AVCodecContext失败")
         return;
     }
-    if (avcodec_parameters_to_context(pContext, codecpar) < 0) {
+    if (avcodec_parameters_to_context(myAudio->pContext, myAudio->codecpar) < 0) {
         LOGE("avcodec_parameters_to_context  失败")
         return;
     }
-    int open2 = avcodec_open2(pContext, pCodec, NULL);
+    int open2 = avcodec_open2(myAudio->pContext, pCodec, NULL);
     if (open2 != 0) {
         LOGE("avcodec_open2  失败")
         return;
@@ -70,10 +71,15 @@ void MyFfmpeg::deal() {
 }
 
 void MyFfmpeg::start() {
-    while (1) {
+    myAudio->start();
+    int count=0;
+    while (myStatue != NULL && !myStatue->exit) {
         AVPacket *pPacket = av_packet_alloc();
         if (av_read_frame(avFormatContext, pPacket) == 0) {
-            if (pPacket->stream_index == this->streamIndex) {
+            if (pPacket->stream_index == myAudio->streamIndex) {
+                //解码操作
+                count++;
+
                 this->myQueue->putAvPacket(pPacket);
             } else {
                 av_packet_free(&pPacket);
@@ -82,24 +88,15 @@ void MyFfmpeg::start() {
         } else {
             av_packet_free(&pPacket);
             av_free(pPacket);
-
-            break;
+            while (myStatue != NULL && !myStatue->exit) {
+                if (myQueue->getQueueSize() > 0) {
+                    continue;
+                } else {
+                    myStatue->exit = true;
+                    break;
+                }
+            }
         }
-    }
-
-    while (myQueue->getQueueSize() > 0) {
-
-        AVPacket *pAvPacket = av_packet_alloc();
-
-        myQueue->getAvPacket(pAvPacket);
-
-        av_packet_free(&pAvPacket);
-
-        av_free(pAvPacket);
-
-        pAvPacket = NULL;
-
-
     }
 
     LOGE("编译完成");

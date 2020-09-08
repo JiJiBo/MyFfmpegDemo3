@@ -11,18 +11,18 @@ extern "C"{
 #include "MyCallJava.h"
 #include "MyQueue.h"
 #include "pthread.h"
+#include "MyAudio.h"
 
 class MyFfmpeg {
 public:
     MyCallJava *myCallJava;
     MyQueue *myQueue;
+    MyAudio *myAudio;
     const char *  url;
     MyStatue *myStatue;
     pthread_t prepare_thread;
     AVFormatContext *avFormatContext;
-    int  streamIndex;
-    AVCodecParameters *codecpar;
-    AVCodecContext *pContext;
+
 public:
     MyFfmpeg(MyCallJava *callJava, const char * str);
 

@@ -13,6 +13,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/MyFfmpeg.cpp
         src/main/cpp/MyCallJava.cpp
         src/main/cpp/MyStatue.cpp
+        src/main/cpp/MyAudio.cpp
 
         src/main/cpp/native-lib.cpp)
 
