@@ -37,16 +37,6 @@ Java_com_zcf_ffmpeglibrary_FfmpegDemo_prepare(JNIEnv *env, jobject thiz, jstring
 JNIEXPORT void JNICALL
 Java_com_zcf_ffmpeglibrary_FfmpegDemo_start(JNIEnv *env, jobject thiz) {
     if (ffmpeg != NULL) {
-        try {
-            ffmpeg->start();
-        } catch (std::exception &e) {
-            LOGE(" exception")
-        } catch (std::runtime_error &e) {
-            LOGE(" runtime_error")
-        } catch (std::overflow_error &e) {
-            LOGE(" runtime_error")
-        } catch (std::underflow_error &e) {
-            LOGE(" runtime_error")
-        }
+        ffmpeg->start();
     }
 }

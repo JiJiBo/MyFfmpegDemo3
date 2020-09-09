@@ -81,6 +81,7 @@ target_link_libraries( # Specifies the target library.
         swresample
         swscale
         -landroid
+        OpenSLES
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib}

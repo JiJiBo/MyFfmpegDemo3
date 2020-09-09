@@ -1,5 +1,6 @@
 package com.zcf.myffmpegdemo3
 
+import android.hardware.Camera
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -30,7 +31,6 @@ class MainActivity : AppCompatActivity() {
                 absolutePath
             )
         }
-
 
     }
 

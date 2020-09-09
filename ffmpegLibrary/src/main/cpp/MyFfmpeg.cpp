@@ -15,7 +15,7 @@ MyFfmpeg::MyFfmpeg(MyCallJava *callJava, const char *str) {
     this->myCallJava = callJava;
     this->myStatue = new MyStatue();
     this->myQueue = new MyQueue(myStatue);
-    this->myAudio = new MyAudio(myStatue, myQueue);
+
     url = str;
 }
 
@@ -41,45 +41,50 @@ void MyFfmpeg::deal() {
     }
     for (int i = 0; i < avFormatContext->nb_streams; i++) {
         if (avFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            this->myAudio = new MyAudio(myStatue, myQueue,
+                                        avFormatContext->streams[i]->codecpar->sample_rate);
             myAudio->streamIndex = i;
             myAudio->codecpar = avFormatContext->streams[i]->codecpar;
             break;
         }
     }
 
+    //寻找解码器
     AVCodec *pCodec = avcodec_find_decoder(myAudio->codecpar->codec_id);
     if (!pCodec) {
         LOGE("寻找解码器失败")
         return;
     }
-
+    //空间申请
     myAudio->pContext = avcodec_alloc_context3(pCodec);
     if (!myAudio->pContext) {
-        LOGE("寻找AVCodecContext失败")
+        LOGE("空间申请失败")
         return;
     }
+    // 把avstream中的参数复制到codec中
     if (avcodec_parameters_to_context(myAudio->pContext, myAudio->codecpar) < 0) {
-        LOGE("avcodec_parameters_to_context  失败")
+        LOGE("复制  失败")
         return;
     }
+    // //打开解码器
     int open2 = avcodec_open2(myAudio->pContext, pCodec, NULL);
     if (open2 != 0) {
-        LOGE("avcodec_open2  失败")
+        LOGE(" 打开解码器  失败")
         return;
     }
     callJava();
 }
 
 void MyFfmpeg::start() {
+
     myAudio->start();
-    int count=0;
+    int count = 0;
     while (myStatue != NULL && !myStatue->exit) {
         AVPacket *pPacket = av_packet_alloc();
         if (av_read_frame(avFormatContext, pPacket) == 0) {
             if (pPacket->stream_index == myAudio->streamIndex) {
                 //解码操作
                 count++;
-
                 this->myQueue->putAvPacket(pPacket);
             } else {
                 av_packet_free(&pPacket);
@@ -98,10 +103,8 @@ void MyFfmpeg::start() {
             }
         }
     }
-
     LOGE("编译完成");
 }
 
 MyFfmpeg::~MyFfmpeg() {
-
 }
